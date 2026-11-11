@@ -1,0 +1,103 @@
+name: pawpal
+description: A production-grade cross-platform pet care app for Android and iOS
+version: 1.0.0+1
+publish_to: "none"
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Navigation
+  go_router: ^14.6.2
+
+  # Local Database (Offline-first)
+  drift: ^2.22.1
+  sqlite3_flutter_libs: ^0.5.26
+  path: ^1.9.0
+  path_provider: ^2.1.5
+
+  # Firebase
+  firebase_core: ^3.8.0
+  firebase_auth: ^5.3.3
+  cloud_firestore: ^5.5.0
+  firebase_storage: ^12.3.7
+  firebase_messaging: ^15.1.4
+  firebase_crashlytics: ^4.2.0
+  firebase_analytics: ^11.3.6
+  firebase_performance: ^0.10.0+8
+  firebase_remote_config: ^5.2.0
+  google_sign_in: ^6.2.2
+  sign_in_with_apple: ^6.1.1
+
+  # Local Notifications
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  android_alarm_manager_plus: ^5.0.2
+  permission_handler: ^11.3.1
+
+  # Utilities
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  equatable: ^2.0.5
+  uuid: ^4.5.1
+  intl: ^0.20.3
+  image_picker: ^1.1.2
+  image_cropper: ^9.0.0
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  url_launcher: ^6.3.1
+  share_plus: ^10.1.2
+  pdf: ^3.11.3
+  printing: ^5.13.4
+  qr_flutter: ^4.1.0
+  flutter_svg: ^2.0.17
+  google_fonts: ^8.0.0
+  flutter_animate: ^4.5.2
+  confetti: ^0.8.0
+  haptic_feedback: ^0.3.0
+  connectivity_plus: ^6.1.0
+  package_info_plus: ^8.3.0
+  device_info_plus: ^11.2.1
+  flutter_secure_storage: ^9.2.4
+  flutter_dotenv: ^5.2.1
+  fl_chart: ^0.68.0
+  shared_preferences: ^2.3.3
+  cron: ^0.6.2
+  dartz: ^0.10.1
+
+  riverpod: any
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  riverpod_generator: ^2.6.1
+  build_runner: ^2.4.13
+  drift_dev: ^2.22.1
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+  mocktail: ^1.0.4
+  integration_test:
+    sdk: flutter
+
+dependency_overrides:
+  image_cropper_platform_interface: 7.1.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/data/
+    - .env

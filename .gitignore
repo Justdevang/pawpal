@@ -1,0 +1,64 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+*.dart_tool/
+.pub-cache/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flutter generated
+flutter_*.png
+flutter_*.jpg
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Firebase
+google-services.json
+google-services-dev.json
+GoogleService-Info.plist
+GoogleService-Info-Dev.plist
+
+# Android
+android/app/build/
+android/.gradle/
+android/local.properties
+android/keystore/
+*.keystore
+*.jks
+
+# iOS
+ios/Pods/
+ios/Runner.xcworkspace/
+ios/Runner/Generated.xcconfig
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/.symlinks/
+
+# Coverage
+coverage/
+*.lcov
+
+# Logs
+*.log
+
+# Test
+test_driver/
+
+# Misc
+*.orig
+.mason/
+# Widget Preview related
+.widget_preview/

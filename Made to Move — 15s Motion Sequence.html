@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Made to Move — 15s Motion Sequence</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200..900&display=swap">
+<style>
+:root{box-sizing:border-box;--fg:#f3efe8;--ui:rgba(255,255,255,.14);--accent:#6b7cff;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fg:#f3efe8;--ui:rgba(255,255,255,.14)}}
+:root[data-theme="dark"]{--fg:#f3efe8;--ui:rgba(255,255,255,.14)}
+html,body{height:100%;margin:0;background:#05060d;color:var(--fg);overflow:hidden;
+font-family:"Unbounded","Arial Black","Helvetica Neue",Arial,sans-serif}
+#stage{position:relative;width:100%;height:100%;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.6) 100%)}
+#flash{position:absolute;inset:0;pointer-events:none;background:var(--accent);mix-blend-mode:screen;opacity:0}
+.bar{position:absolute;left:0;right:0;height:7vh;background:#000;pointer-events:none}
+#bt{top:0}#bb{bottom:0}
+#txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;perspective:900px;pointer-events:none}
+.line{display:none;white-space:nowrap;font-size:clamp(2.1rem,11vw,7.5rem);line-height:1;letter-spacing:-.02em;text-align:center;
+transform-style:preserve-3d;text-shadow:0 0 40px var(--accent)}
+.line.long{font-size:clamp(1.5rem,7.4vw,5.6rem)}
+.line span{display:inline-block;will-change:transform,opacity,filter}
+.line span.sp{width:.3em}
+#hud{position:absolute;left:0;right:0;bottom:calc(7vh + 10px);display:flex;gap:14px;align-items:center;justify-content:center;padding:0 16px;font-size:12px}
+#hud button{width:36px;height:36px;border-radius:50%;border:1px solid var(--ui);background:rgba(0,0,0,.35);color:var(--fg);cursor:pointer;font:inherit}
+#hud button:focus-visible,#seek:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+#seek{width:min(420px,52vw);accent-color:var(--accent)}
+#tm{min-width:84px;font-variant-numeric:tabular-nums;opacity:.8}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="vig"></div><div id="flash"></div>
+  <div id="txt" aria-live="off"></div>
+  <div class="bar" id="bt"></div><div class="bar" id="bb"></div>
+  <div id="hud">
+    <button id="pp" aria-label="Play or pause">❚❚</button>
+    <input id="seek" type="range" min="0" max="15" step="0.01" value="0" aria-label="Timeline">
+    <span id="tm">0:00 / 0:15</span>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+// ---- Edit the words here (5 beats x 3s = 15s) ----
+const BEATS=[
+ {w:"Imagine",s:0,hue:.62},{w:"Design",s:3,hue:.76},{w:"Animate",s:6,hue:.90},
+ {w:"Elevate",s:9,hue:1.04},{w:"Made to move",s:12,hue:1.12,long:1}
+];
+const D=15, clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const $=id=>document.getElementById(id);
+
+// ---- Three.js scene ----
+const cv=$("c"), R=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+R.setPixelRatio(Math.min(devicePixelRatio||1,2));
+const S=new THREE.Scene(); S.fog=new THREE.FogExp2(0x05060d,.045);
+const cam=new THREE.PerspectiveCamera(50,1,.1,100);
+const col=new THREE.Color(), bg=new THREE.Color();
+const L1=new THREE.PointLight(0xffffff,2.2,40), L2=new THREE.PointLight(0xffffff,1.4,40);
+L1.position.set(5,4,6); L2.position.set(-6,-3,4); S.add(L1,L2,new THREE.AmbientLight(0xffffff,.25));
+
+const wire=new THREE.MeshBasicMaterial({wireframe:true,transparent:true,opacity:.9});
+const solid=new THREE.MeshPhongMaterial({shininess:90,specular:0xffffff});
+const ico=new THREE.Mesh(new THREE.IcosahedronGeometry(2.2,2),wire);
+const knot=new THREE.Mesh(new THREE.TorusKnotGeometry(1.5,.42,160,20),wire);
+const ring=new THREE.Group();
+for(let i=0;i<14;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(.7,.7,.7),solid);
+ const a=i/14*Math.PI*2;m.position.set(Math.cos(a)*3,Math.sin(i*1.7)*.6,Math.sin(a)*3);ring.add(m)}
+const gyro=new THREE.Group();
+[2.4,1.9,1.4].forEach(r=>gyro.add(new THREE.Mesh(new THREE.TorusGeometry(r,.07,16,120),solid)));
+const shapes=[ico,ring,knot,gyro]; // index = shape id
+const base=[1,1,1,1];
+S.add(...shapes);
+
+const N=1600, pos=new Float32Array(N*3);
+for(let i=0;i<N;i++){const r=6+Math.random()*12,u=Math.random()*2-1,a=Math.random()*6.283,q=Math.sqrt(1-u*u);
+ pos[i*3]=r*q*Math.cos(a);pos[i*3+1]=r*u;pos[i*3+2]=r*q*Math.sin(a)}
+const pg=new THREE.BufferGeometry();pg.setAttribute("position",new THREE.BufferAttribute(pos,3));
+const pm=new THREE.PointsMaterial({size:.05,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false});
+const pts=new THREE.Points(pg,pm);S.add(pts);
+
+// which shapes show in which beat
+const vis=[[0],[2],[1],[3],[2,3]];
+const bump=(i,t)=>{const s=BEATS[i].s,a=ease(clamp((t-s+.35)/.7)),
+ o=i<4?ease(clamp((t-s-3+.35)/.7)):0;return a*(1-o)};
+
+// ---- Kinetic type ----
+const txt=$("txt"), lines=BEATS.map(b=>{
+ const el=document.createElement("div");el.className="line"+(b.long?" long":"");el.setAttribute("aria-label",b.w);
+ [...b.w].forEach(ch=>{const sp=document.createElement("span");
+  if(ch===" "){sp.className="sp";sp.innerHTML="&nbsp;"}else sp.textContent=ch;el.appendChild(sp)});
+ txt.appendChild(el);return el});
+
+function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+addEventListener("resize",resize);resize();
+
+function render(t){
+ let b=0;BEATS.forEach((x,i)=>{if(t>=x.s)b=i});
+ // colour drift across beats
+ let h=BEATS[0].hue;for(let i=1;i<5;i++)h+=(BEATS[i].hue-BEATS[i-1].hue)*ease(clamp((t-BEATS[i].s+.3)/.6));
+ col.setHSL(h,.85,.62);bg.setHSL(h,.55,.035);
+ R.setClearColor(bg);S.fog.color.copy(bg);
+ wire.color.copy(col);solid.color.setHSL(h,.7,.5);pm.color.setHSL(h,.6,.8);
+ L1.color.setHSL(h,.9,.65);L2.color.setHSL(h+.18,.9,.6);
+ document.documentElement.style.setProperty("--accent","#"+col.getHexString());
+
+ // spin impulses at each cut
+ const spin=BEATS.reduce((a,x,i)=>a+(i?ease(clamp((t-x.s)/1.1)):0),0)*Math.PI*.8;
+ shapes.forEach((m,k)=>{let w=0;vis.forEach((v,i)=>{if(v.includes(k))w+=bump(i,t)});w=Math.min(1,w);
+  m.visible=w>.01;m.scale.setScalar(Math.max(.001,w*base[k]*(b===4?.8:1)));
+  m.rotation.y=t*.25*(1+k*.3)+spin*(k%2?1:-1);m.rotation.x=t*.18+spin*.5});
+ ring.children.forEach((m,i)=>{m.rotation.x=t*.8+i;m.rotation.y=t*.6+i*.5});
+ gyro.children.forEach((m,i)=>{m.rotation.x=t*(.5+i*.3)+i*1.2;m.rotation.y=t*(.35+i*.2)});
+ pts.rotation.y=t*.03+spin*.08;pts.rotation.x=spin*.02;
+
+ // camera path: slow dolly + punch at each cut + final pull-back
+ let punch=0;BEATS.forEach((x,i)=>{if(i&&t>x.s)punch+=1.6*Math.exp(-(t-x.s)*4)});
+ const rad=10-t*.2+punch+ease(clamp((t-12)/3))*3.2, ang=t*.12+spin*.08;
+ cam.position.set(Math.sin(ang)*rad,1.4*Math.sin(t*.4),Math.cos(ang)*rad);cam.lookAt(0,0,0);
+ R.render(S,cam);
+
+ // flash at cuts
+ let f=0;BEATS.forEach((x,i)=>{if(i&&t>x.s)f+=.5*Math.exp(-(t-x.s)*9)});
+ $("flash").style.opacity=Math.min(.6,f);
+
+ // type
+ lines.forEach((el,bi)=>{
+  if(bi!==b){el.style.display="none";return}
+  el.style.display="block";const u=t-BEATS[bi].s;
+  [...el.children].forEach((c,i)=>{
+   const inn=ease(clamp((u-i*.06)/.75)), out=bi<4?ease(clamp((u-2.4-i*.03)/.55)):0;
+   const y=(1-inn)*70-out*70, z=(1-inn)*-380+out*260, rx=(1-inn)*-85+out*70, bl=(1-inn)*14+out*12;
+   c.style.transform=`translate3d(0,${y}px,${z}px) rotateX(${rx}deg)`;
+   c.style.opacity=inn*(1-out);c.style.filter=`blur(${bl}px)`;
+   c.style.fontWeight=Math.round(200+inn*600);
+  });
+  el.style.letterSpacing=(-.02+(1-ease(clamp(u/1.2)))*.12)+"em";
+ });
+
+ const m=Math.floor(t/60),s=Math.floor(t%60);
+ $("tm").textContent=`${m}:${String(s).padStart(2,"0")} / 0:15`;
+ $("seek").value=t;
+}
+
+// ---- Playback ----
+let t=0,playing=true,last=performance.now();
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+if(reduce){t=13.8;playing=false}
+const setBtn=()=>$("pp").textContent=playing?"❚❚":(t>=D?"↺":"▶");
+function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+ if(playing){t+=dt;if(t>=D){t=D;playing=false}setBtn()}
+ render(t);requestAnimationFrame(loop)}
+$("pp").onclick=()=>{if(t>=D)t=0;playing=!playing;setBtn()};
+$("seek").oninput=e=>{t=parseFloat(e.target.value);playing=false;setBtn()};
+document.addEventListener("keydown",e=>{if(e.code==="Space"&&e.target.tagName!=="BUTTON"){e.preventDefault();$("pp").click()}});
+setBtn();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+targets:
+  $default:
+    sources:
+      - "lib/**"
+      - "$package$"
+    builders:
+      drift_dev:
+        generate_for:
+          - "lib/core/database/**"

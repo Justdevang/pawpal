@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserId() {
+      return request.auth.uid;
+    }
+
+    function isOwner(userId, resource) {
+      return isSignedIn() && getUserId() == userId;
+    }
+
+    function isPetOwner(petId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/pets/$(petId)) &&
+        get(/databases/$(database)/documents/pets/$(petId)).data.userId == getUserId();
+    }
+
+    function isFamilyMember(petId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/family_members/$(petId)) &&
+        get(/databases/$(database)/documents/family_members/$(petId)).data.email == getUserId();
+    }
+
+    function hasPetAccess(petId) {
+      return isPetOwner(petId) || isFamilyMember(petId);
+    }
+
+    function canEditPet(petId) {
+      return isPetOwner(petId) ||
+        (isFamilyMember(petId) && get(/databases/$(database)/documents/family_members/$(petId)).data.role in ['owner', 'editor']);
+    }
+
+    function canViewPet(petId) {
+      return hasPetAccess(petId);
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      allow create: if isSignedIn() && getUserId() == userId;
+    }
+
+    // Pets collection
+    match /pets/{petId} {
+      allow read: if canViewPet(petId);
+      allow create: if isSignedIn() && request.resource.data.userId == getUserId();
+      allow update, delete: if canEditPet(petId);
+
+      // Vaccination records subcollection
+      match /vaccinations/{vaccinationId} {
+        allow read: if canViewPet(petId);
+        allow create, update, delete: if canEditPet(petId);
+      }
+
+      // Medication records subcollection
+      match /medications/{medicationId} {
+        allow read: if canViewPet(petId);
+        allow create, update, delete: if canEditPet(petId);
+
+        match /schedules/{scheduleId} {
+          allow read: if canViewPet(petId);
+          allow create, update, delete: if canEditPet(petId);
+        }
+
+        match /logs/{logId} {
+          allow read: if canViewPet(petId);
+          allow create: if canEditPet(petId);
+          // Logs are append-only for audit trail
+          allow update, delete: if false;
+        }
+      }
+
+      // Weight entries subcollection
+      match /weights/{weightId} {
+        allow read: if canViewPet(petId);
+        allow create, update, delete: if canEditPet(petId);
+      }
+
+      // Documents subcollection
+      match /documents/{docId} {
+        allow read: if canViewPet(petId);
+        allow create, update, delete: if canEditPet(petId);
+      }
+
+      // Appointments subcollection
+      match /appointments/{apptId} {
+        allow read: if canViewPet(petId);
+        allow create, update, delete: if canEditPet(petId);
+      }
+
+      // Family members subcollection
+      match /family_members/{memberId} {
+        allow read: if canViewPet(petId);
+        allow create: if isPetOwner(petId);
+        allow update: if isPetOwner(petId) || (isFamilyMember(petId) && get(/databases/$(database)/documents/family_members/$(petId)).data.role == 'owner');
+        allow delete: if isPetOwner(petId);
+      }
+    }
+
+    // Reminders collection (top-level for user-wide queries)
+    match /reminders/{reminderId} {
+      allow read, write: if isSignedIn() && resource.data.userId == getUserId();
+      allow create: if isSignedIn() && request.resource.data.userId == getUserId();
+    }
+
+    // Family members top-level (for invite queries)
+    match /family_members/{memberId} {
+      allow read: if isSignedIn() &&
+        (resource.data.email == getUserId() || resource.data.invitedBy == getUserId());
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() &&
+        (resource.data.invitedBy == getUserId() || resource.data.email == getUserId());
+      allow delete: if isSignedIn() && resource.data.invitedBy == getUserId();
+    }
+
+    // Service configs (public read)
+    match /service_configs/{configId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Admin only
+    }
+
+    // Vaccine templates (public read by species/region)
+    match /vaccine_templates/{templateId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Admin only
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2026-01-01",
+  "templates": [
+    {
+      "name": "Rabies",
+      "species": "dog",
+      "description": "Core vaccine required by law in most regions",
+      "initialDoseWeeks": 12,
+      "boosterIntervalWeeks": 52,
+      "boosterCount": 1,
+      "region": "global",
+      "isCore": true,
+      "notes": "Required for licensing and travel"
+    },
+    {
+      "name": "DHPP",
+      "species": "dog",
+      "description": "Combination vaccine for Distemper, Hepatitis, Parainfluenza, Parvovirus",
+      "initialDoseWeeks": 6,
+      "boosterIntervalWeeks": 3,
+      "boosterCount": 3,
+      "region": "global",
+      "isCore": true,
+      "notes": "Puppy series: 6, 9, 12, 16 weeks"
+    },
+    {
+      "name": "Leptospirosis",
+      "species": "dog",
+      "description": "Bacterial infection from contaminated water/soil",
+      "initialDoseWeeks": 12,
+      "boosterIntervalWeeks": 52,
+      "boosterCount": 1,
+      "region": "global",
+      "isCore": false,
+      "notes": "Recommended for dogs with outdoor exposure"
+    },
+    {
+      "name": "Bordetella",
+      "species": "dog",
+      "description": "Kennel cough vaccine",
+      "initialDoseWeeks": 8,
+      "boosterIntervalWeeks": 52,
+      "boosterCount": 1,
+      "region": "global",
+      "isCore": false,
+      "notes": "Required for boarding/daycare"
+    },
+    {
+      "name": "Lyme",
+      "species": "dog",
+      "description": "Tick-borne disease prevention",
+      "initialDoseWeeks": 12,
+      "boosterIntervalWeeks": 52,
+      "boosterCount": 1,
+      "region": "US",
+      "isCore": false,
+      "notes": "High-risk areas only"
+    },
+    {
+      "name": "FVRCP",
+      "species": "cat",
+      "description": "Feline Viral Rhinotracheitis, Calicivirus, Panleukopenia",
+      "initialDoseWeeks": 6,
+      "boosterIntervalWeeks": 3,
+      "boosterCount": 3,
+      "region": "global",
+      "isCore": true,
+      "notes": "Core vaccine for all cats"
+    },
+    {
+      "name": "Rabies",
+      "species": "cat",
+      "description": "Core vaccine required by law in most regions",
+      "initialDoseWeeks": 12,
+      "boosterIntervalWeeks": 52,
+      "boosterCount": 1,
+      "region": "global",
+      "isCore": true,
+      "notes": "Required for licensing"
+    },
+    {
+      "name": "FeLV",
+      "species": "cat",
+      "description": "Feline Leukemia Virus",
+      "initialDoseWeeks": 8,
+      "boosterIntervalWeeks": 52,
+      "boosterCount": 1,
+      "region": "global",
+      "isCore": false,
+      "notes": "Recommended for outdoor cats"
+    },
+    {
+      "name": "RHDV2",
+      "species": "rabbit",
+      "description": "Rabbit Hemorrhagic Disease Virus 2",
+      "initialDoseWeeks": 4,
+      "boosterIntervalWeeks": 52,
+      "boosterCount": 1,
+      "region": "global",
+      "isCore": true,
+      "notes": "Critical for rabbit health"
+    }
+  ]
+}

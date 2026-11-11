@@ -1,0 +1,29 @@
+// ignore_for_file: type=lint
+# Flutter flavor configuration
+
+flavors:
+  dev:
+    app:
+      name: "PawPal Dev"
+      applicationId: "com.pawpal.app.dev"
+      iosBundleId: "com.pawpal.app.dev"
+      versionName: "1.0.0-dev"
+      versionCode: 1
+      icon: "assets/images/app_icon_dev.png"
+    firebase:
+      android: "google-services-dev.json"
+      ios: "GoogleService-Info-Dev.plist"
+    env: ".env.dev"
+
+  prod:
+    app:
+      name: "PawPal"
+      applicationId: "com.pawpal.app"
+      iosBundleId: "com.pawpal.app"
+      versionName: "1.0.0"
+      versionCode: 1
+      icon: "assets/images/app_icon.png"
+    firebase:
+      android: "google-services.json"
+      ios: "GoogleService-Info.plist"
+    env: ".env"
